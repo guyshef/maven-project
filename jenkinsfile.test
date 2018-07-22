@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    parameters {
+<<<<<<< HEAD
+         string(name: 'tomcat_dev', defaultValue: '10.82.70.123', description: 'Staging Server')
+         string(name: 'tomcat_prod', defaultValue: '10.82.70.136', description: 'Production Server')
+=======
+         string(name: 'tomcat_dev', defaultValue: '10.82.70.136', description: 'Staging Server')
+         string(name: 'tomcat_prod', defaultValue: '10.82.70.123', description: 'Production Server')
+>>>>>>> cf90853061bfce3098f7690337be4acead9ccd57
+    }
+
+    triggers {
+         pollSCM('* * * * *')
+     }
+
+stages{
+        stage('Build'){
+            steps {
+                sh 'mvn clean package'
+            }
+            post {
+                success {
+                    echo 'Now Archiving...bla bla2'
+                    archiveArtifacts artifacts: '**/target/*.war'
+                }
+            }
+        }
+
+        stage ('Deployments'){
+            parallel{
+                stage ('Deploy to Staging'){
+                    steps {
+                        sh "scp -i /home/jenkins/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_dev}:/var/lib/tomcat7/webapps"
+                    }
+                }
+
+                stage ("Deploy to Production"){
+                    steps {
+                        sh "scp -i /home/jenkins/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_prod}:/var/lib/tomcat7/webapps"
+                    }
+                }
+            }
+        }
+    }
+}
